@@ -1,0 +1,55 @@
+# ----------------------------------------------------------------------
+# CONTINUOUS DEPLOYMENT (CD)
+# This workflow builds a Docker image and "deploys" it.
+# It only runs AFTER the CI workflow succeeds on the main branch,
+# so broken code never gets deployed.
+# ----------------------------------------------------------------------
+name: CD
+
+on:
+  # Run this workflow only when the "CI" workflow finishes...
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Build image & deploy
+    runs-on: ubuntu-latest
+
+    # ...and only if CI actually PASSED (not just finished).
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      # Build the Docker image defined in our Dockerfile.
+      # This is the deployable "artifact".
+      - name: Build Docker image
+        run: docker build -t calculator-api:${{ github.sha }} .
+
+      # Smoke test: start the container and hit its health endpoint
+      # to confirm the built image actually runs before we "ship" it.
+      - name: Smoke test the image
+        run: |
+          docker run -d -p 5000:5000 --name calc calculator-api:${{ github.sha }}
+          sleep 5
+          curl --fail http://localhost:5000/health
+          docker stop calc
+
+      # ----------------------------------------------------------------
+      # The real "deploy" step. This is a placeholder that just prints
+      # a message so you can see CD run end-to-end with zero setup.
+      #
+      # In a real project you would replace this with ONE of:
+      #   - push the image to a registry (Docker Hub / GitHub Packages)
+      #   - deploy to a cloud host (AWS, Azure, Render, Fly.io, Heroku)
+      # Those need secrets (see README "Real deployment" section).
+      # ----------------------------------------------------------------
+      - name: Deploy (simulated)
+        run: |
+          echo "Deploying calculator-api commit ${{ github.sha }}"
+          echo "Image built and smoke-tested successfully."
+          echo "Replace this step with a real deploy when you are ready."

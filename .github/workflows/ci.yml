@@ -1,0 +1,50 @@
+# ----------------------------------------------------------------------
+# CONTINUOUS INTEGRATION (CI)
+# This workflow LINTS and TESTS the code on every push and pull request.
+# It is the "gatekeeper": if it fails, you know something is broken.
+# ----------------------------------------------------------------------
+name: CI
+
+# WHEN does this run? -> on pushes and PRs targeting main.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+
+    # Run the whole job against several Python versions to prove
+    # compatibility. Each version runs in parallel.
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      # 1. Get a copy of your repository onto the runner.
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      # 2. Install the requested Python version.
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      # 3. Install our dependencies (app + dev tools).
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      # 4. Lint: catch style errors and obvious mistakes.
+      - name: Lint with flake8
+        run: flake8 app tests
+
+      # 5. Test: run the full pytest suite with coverage.
+      - name: Run tests
+        run: pytest --cov=app --cov-report=term-missing
