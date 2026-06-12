@@ -22,12 +22,16 @@ def divide(a: float, b: float) -> float:
         raise ValueError("Cannot divide by zero")
     return a / b
 
+def power(a: float, b: float) -> float:
+    return a ** b
+
 
 OPERATIONS = {
     "add": add,
     "subtract": subtract,
     "multiply": multiply,
     "divide": divide,
+    "power": power,
 }
 
 

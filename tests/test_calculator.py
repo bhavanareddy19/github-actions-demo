@@ -39,6 +39,9 @@ def test_calculate_unknown_operation():
     with pytest.raises(ValueError):
         calculate("modulo", 5, 2)
 
+def test_power():
+    assert calculate("power", 2, 3) == 8
+
 
 # Parametrized test: one function, many cases.
 @pytest.mark.parametrize(
